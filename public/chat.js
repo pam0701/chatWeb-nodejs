@@ -2,10 +2,9 @@
 
 (() => {
   const socket = new WebSocket(`ws://${window.location.host}/chat`);
-
   const btn = document.getElementById('btn');
   const inputEl = document.querySelector('#input');
-  const chatEl = document.getElementById('chat');
+  const chatEl = document.querySelector('#chat');
 
   const adj = [
     '멋진',
@@ -31,6 +30,7 @@
     '치킨이 땡기는',
     '술이 땡기는',
   ];
+
   const member = [
     '유림님',
     '지훈님',
@@ -66,6 +66,7 @@
     { bg: 'alert-warning', text: 'text-black' },
     { bg: 'alert-info', text: 'text-black' },
   ];
+
   function pickRandomArr(arr) {
     const randomIndex = Math.floor(Math.random() * arr.length);
     return arr[randomIndex];
@@ -84,21 +85,18 @@
     socket.send(JSON.stringify(data));
     inputEl.value = '';
   });
-
   socket.addEventListener('open', () => {
-    /*     socket.send('안녕하세요 저는 클라이언트에요!'); */
+    // socket.send('안녕하세요 저는 클라이언트에요!');
   });
-
   socket.addEventListener('message', (event) => {
-    const { name, msg } = JSON.parse(event.data);
-
+    const { name, msg, bg, text } = JSON.parse(event.data);
     const msgEl = document.createElement('p');
     msgEl.innerText = `${name} : ${msg}`;
     msgEl.classList.add('p-2');
-    msgEl.classList.add('bg-warning');
-    msgEl.classList.add('text-black');
+    msgEl.classList.add(bg);
+    msgEl.classList.add(text);
     msgEl.classList.add('fw-bold');
-    chatEl?.appendChild(msgEl);
+    chatEl.appendChild(msgEl);
     chatEl.scrollTop = chatEl.scrollHeight - chatEl.clientHeight;
   });
 })();
