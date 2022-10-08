@@ -21,15 +21,41 @@ const pug = new Pug({
 app.use(mount('/public', serve('public')));
 
 app.ws.use(
-  route.all('/chat', (ctx) => {
+  route.all('/chat', async (ctx) => {
     const { server } = app.ws;
-    server?.clients.forEach((client) => {
+
+    const client = await _client;
+    const cursor = client.db('Board').collection('chats');
+    const chats = cursor.find(
+      {},
+      {
+        sort: {
+          createdAt: 1,
+        },
+      }
+    );
+    const chatsData = await chats.toArray();
+
+    // type을 sync로 전달하여 이전 채팅 내역임을 알려기
+    ctx.websocket.send(
+      JSON.stringify({
+        type: 'sync',
+        data: {
+          chatsData,
+        },
+      })
+    );
+
+    server.clients.forEach((client) => {
       client.send(
         JSON.stringify({
-          name: 'sever',
-          msg: `새로운 유저가 참여했습니다. 현재 유저 수 ${server.clients.size}`,
-          bg: 'bg-danger',
-          text: 'text-white',
+          type: 'chat',
+          data: {
+            name: '서버',
+            msg: `새로운 유저가 참여했습니다. 현재 유저 수 ${server.clients.size}`,
+            bg: 'bg-danger',
+            text: 'text-white',
+          },
         })
       );
     });
@@ -41,10 +67,19 @@ app.ws.use(
       const chatCursor = insertClient.db('Board').collection('chats');
       await chatCursor.insertOne({
         ...chat,
+        createdAt: new Date(),
       });
 
-      server?.clients.forEach((client) => {
-        client.send(message.toString());
+      // 사용자로 부터 입력 받은 채팅에는 type: 'chat' 추가
+      server.clients.forEach((client) => {
+        client.send(
+          JSON.stringify({
+            type: 'chat',
+            data: {
+              ...chat,
+            },
+          })
+        );
       });
     });
 

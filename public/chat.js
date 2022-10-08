@@ -85,18 +85,54 @@
     socket.send(JSON.stringify(data));
     inputEl.value = '';
   });
+  //enter key 누르면 채팅 게시
+  inputEl.addEventListener('keyup', (event) => {
+    if (event.keyCode === 13) {
+      btn.click();
+    }
+  });
+
   socket.addEventListener('open', () => {
     // socket.send('안녕하세요 저는 클라이언트에요!');
   });
+
+  const chats = [];
+
+  function drawChats(type, data) {
+    if (type === 'sync') {
+      chatEl.innerHTML = '';
+      chats.forEach(({ name, msg, bg, text }) => {
+        const msgEl = document.createElement('p');
+        msgEl.classList.add('p-2');
+        msgEl.classList.add(bg);
+        msgEl.classList.add(text);
+        msgEl.classList.add('fw-bold');
+        msgEl.innerText = `${name} : ${msg}`;
+        chatEl.appendChild(msgEl);
+        chatEl.scrollTop = chatEl.scrollHeight - chatEl.clientHeight;
+      });
+    } else if (type === 'chat') {
+      const msgEl = document.createElement('p');
+      msgEl.classList.add('p-2');
+      msgEl.classList.add(data.bg);
+      msgEl.classList.add(data.text);
+      msgEl.classList.add('fw-bold');
+      msgEl.innerText = `${data.name} : ${data.msg}`;
+      chatEl.appendChild(msgEl);
+      chatEl.scrollTop = chatEl.scrollHeight - chatEl.clientHeight;
+    }
+  }
   socket.addEventListener('message', (event) => {
-    const { name, msg, bg, text } = JSON.parse(event.data);
-    const msgEl = document.createElement('p');
-    msgEl.innerText = `${name} : ${msg}`;
-    msgEl.classList.add('p-2');
-    msgEl.classList.add(bg);
-    msgEl.classList.add(text);
-    msgEl.classList.add('fw-bold');
-    chatEl.appendChild(msgEl);
-    chatEl.scrollTop = chatEl.scrollHeight - chatEl.clientHeight;
+    const msgData = JSON.parse(event.data);
+    const { type, data } = msgData;
+
+    if (msgData.type === 'sync') {
+      const oldChats = data.chatsData;
+      chats.push(...oldChats);
+      drawChats(msgData.type, data);
+    } else if (msgData.type === 'chat') {
+      chats.push(data);
+      drawChats(msgData.type, data);
+    }
   });
 })();
