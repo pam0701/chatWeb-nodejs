@@ -46,22 +46,22 @@ app.ws.use(
       })
     );
 
-    server.clients.forEach((client) => {
+    server?.clients.forEach((client) => {
       client.send(
         JSON.stringify({
           type: 'chat',
           data: {
-            name: '서버',
-            msg: `새로운 유저가 참여했습니다. 현재 유저 수 ${server.clients.size}`,
+            name: 'system',
+            msg: `새로운 유저가 참여했습니다. 현재 유저 수: ${server.clients.size}`,
             bg: 'bg-danger',
-            text: 'text-white',
+            textColor: 'text-white',
           },
         })
       );
     });
 
     ctx.websocket.on('message', async (message) => {
-      const chat = JSON.parse(message);
+      const chat = JSON.parse(message.toString());
 
       const insertClient = await _client;
       const chatCursor = insertClient.db('Board').collection('chats');
@@ -71,7 +71,7 @@ app.ws.use(
       });
 
       // 사용자로 부터 입력 받은 채팅에는 type: 'chat' 추가
-      server.clients.forEach((client) => {
+      server?.clients.forEach((client) => {
         client.send(
           JSON.stringify({
             type: 'chat',
@@ -83,7 +83,7 @@ app.ws.use(
       });
     });
 
-    ctx.websocket.on('close', () => {
+    ctx.websocket.on('close', (message) => {
       server?.clients.forEach((client) => {
         client.send(
           JSON.stringify({
