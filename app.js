@@ -105,6 +105,8 @@ app.use(async (ctx) => {
   await ctx.render('chat');
 });
 
-app.listen(PORT, () => {
-  console.log(`서버는 ${PORT}번 포트에서 실행 중입니다!`);
+var port = process.env.PORT || 3000;
+
+app.listen(port, () => {
+  console.log(`서버는 ${port}번 포트에서 실행 중입니다!`);
 });
